@@ -40,7 +40,7 @@ get_tweets_data <- function(var, n) {
   tweet_words <- tibble(word = names(tweet_tab), n = as.numeric(tweet_tab)) %>%
     arrange(desc(n)) %>% 
     anti_join(stop_words) %>%
-    filter(!grepl("\\d|@|amp", word)) %>%
+    filter(!grepl("\\d|@|amp|nigg", word)) %>%
     filter(!grepl(gsub(" ", "|", var), word, ignore.case = TRUE)) %>%
     subset(subset = nchar(word) != 1)
   

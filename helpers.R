@@ -9,7 +9,7 @@ library(wordcloud2)
 
 # generate wordclouds of all words 
 generate_wordcloud2 <- function(tbl){
-    wordcloud2(tbl, size = 0.7, shape = 'star', color = brewer.pal(8, "Dark2"))
+    wordcloud2(tbl, size = 0.7, shape = 'cirlce', ellipticity = 1, rotateRatio = 0.5, color = "random-dark")
 }
 
 # Top 20 words in the data

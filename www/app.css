@@ -21,8 +21,6 @@
   width: 75% important;
 }
 
-
-
 @media (min-width: 768px) {
   .col-sm-8 {
       width: 75%;
@@ -34,13 +32,28 @@
   width: 100%;
 }
 
-#comparisoncloud {
-  height: 85vh !important;
+#comparisoncloud,
+#sentimentplots {
+  height: 80vh !important;
 }
+
 
 @media only screen and (max-width: 768px) {
   .col-sm-4 {
     width: 100%;
+  }
+  
+  
+  br, hr {
+    display: none;
+  }
+  
+  #line {
+    display: block;
+  }
+  
+  .radio {
+    display: inline-block;
   }
   .navbar {
     position: static;

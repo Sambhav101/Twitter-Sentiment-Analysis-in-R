@@ -14,10 +14,10 @@ ui <- navbarPage(
     shinyjs::useShinyjs(),
   ),        
   selected = "Twitter",
+  collapsible = TRUE,
   
   tabPanel("Twitter",
            sidebarLayout(
-             
              sidebarPanel(
                       helpText("Select any trending topic and view what people are talking about in twitter"),
                       
@@ -35,27 +35,22 @@ ui <- navbarPage(
                                   max = 1000,
                                   value = 100,
                                   step = 200),
-                      
                       actionButton("search", "Search"),
-                      
                       br(),
-                      hr(),
-                      checkboxInput("sentiments_tweet",
-                                label="View Sentiments",
-                                value=FALSE)
+                      hr(id = "line"),
+                      radioButtons("sentiments",
+                                   label="Select Plots",
+                                   choices = c("wordcloud" = "cloud",
+                                               "top unique words" = "top",
+                                               "Positive to negative ratio" = "bing",
+                                               "top sentiment words" = "afinn",
+                                               "emotion sentiment" = "emotion"),
+                                   selected = "cloud")
              ),
-             
              mainPanel(
-               wordcloud2Output("comparisoncloud") %>% withSpinner(color="#0dc5c1"),
-               shinyjs::hidden(div(
-                 id="sentimentplots",
-                 plotOutput("topwordsplot")  %>% withSpinner(color="#0dc5c1"),
-                 plotOutput("bingsentimentplot"),
-                 plotOutput("topsentimentwords"),
-                 plotOutput("emotionplot")
-               ))
+                 div(id = "cloud", wordcloud2Output("comparisoncloud") %>% withSpinner(color="#0dc5c1")),
+                 div(id = "plots", plotOutput("sentimentplots") %>% withSpinner(color="#0dc5c1")),
              )
-             
            )
   
     ),
@@ -74,9 +69,6 @@ ui <- navbarPage(
                              placeholder = "type something..."),
                br(),
                hr(),
-               checkboxInput("sentiments",
-                             label="View Sentiments",
-                             value=TRUE)
                
              )
            ),
@@ -89,15 +81,23 @@ ui <- navbarPage(
   tabPanel("Books")
 )
 
+
 # Define server logic ----
 server <- function(input, output) {
-      shinyjs::onclick("sentiments_tweet",
-                      shinyjs::toggle(id = "sentimentplots", anim = TRUE) &
-                      shinyjs::toggle(id = "comparisoncloud", anim = TRUE)
-                      )
   
-  
-                   
+  observe({
+    if (input$sentiments != "cloud") {
+      shinyjs::show("sentimentplots")
+      shinyjs::hide("comparisoncloud")
+      shinyjs::show("plots")
+      shinyjs::hide("cloud")
+    } else {
+      shinyjs::hide("sentimentplots")
+      shinyjs::show("comparisoncloud")
+      shinyjs::hide("plots")
+      shinyjs::show("cloud")
+    }
+  })
   
   
   # ************************** Twitter Tab ********************************#
@@ -107,15 +107,9 @@ server <- function(input, output) {
     get_tweets_data(input$topic, input$range)
   })
   
+  # generate wordcloud of tweet_data
   output$comparisoncloud <- renderWordcloud2({
     generate_wordcloud2(tweet_data())
-  })
-  
-  
-  # get top 20 words from the tweet
-  output$topwordsplot <- renderPlot({
-      top_words(tweet_data())
-   
   })
   
   # get sentiment data (positive and negative)
@@ -128,23 +122,20 @@ server <- function(input, output) {
     emotion_sentiments(tweet_data()) 
   })
   
-  # get sentimenet bar plot 
-  output$bingsentimentplot <- renderPlot({
-    bar_sentiments(bing_sentiment_data())
-  })
-  
+  # get tweet_data with positive and negative values assigned
   afinn_data <- reactive({
     afinn_sentiments(tweet_data())
   })
   
-  output$topsentimentwords <- renderPlot({
-    pn_plot(afinn_data())
+  # generate plots according to radio buttons
+  output$sentimentplots <- renderPlot({
+    switch(input$sentiments,
+           top = top_words(tweet_data()),
+           bing = bar_sentiments(bing_sentiment_data()),
+           afinn = pn_plot(afinn_data()),
+           emotion = bar_sentiments(emotion_data()))
   })
   
-  # get sentiment emotion plot
-  output$emotionplot <- renderPlot({
-    bar_sentiments(emotion_data())
-  })
   
   
   # **************************** Text Tab **************************#
