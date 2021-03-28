@@ -1,0 +1,48 @@
+/* Make text visible on inputs */
+.shiny-input-container {
+  color: #474747;
+}
+
+.navbar {
+  position: sticky;
+  top: 0;
+}
+
+.navbar-nav > li:first-of-type {
+  display: none;
+}
+
+.col-sm-4 {
+  width: 25%;
+  
+}
+
+.col-sm-8 {
+  width: 75% important;
+}
+
+
+
+@media (min-width: 768px) {
+  .col-sm-8 {
+      width: 75%;
+      height: 100%;
+  }
+}
+
+#canvas {
+  width: 100%;
+}
+
+#comparisoncloud {
+  height: 85vh !important;
+}
+
+@media only screen and (max-width: 768px) {
+  .col-sm-4 {
+    width: 100%;
+  }
+  .navbar {
+    position: static;
+  }
+}

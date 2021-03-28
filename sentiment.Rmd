@@ -1,0 +1,176 @@
+
+# Loading the required packages for our project
+rtweet is a package that lets you fetch data from twitter
+```{r}
+# load rtweet from CRAN
+library(rtweet)
+library(dplyr)
+library(tidyr)
+library(tidytext)
+library(ggplot2)
+library(textdata)
+library(wordcloud)
+library(reshape2)
+```
+
+Authenticate by creating an access token
+```{r}
+# store api keys
+app_name <- "Analyzer-sentiment"
+api_key <- "vdkDo0185ZjwEz3iWy10zd85T"
+api_secret_key <- "T6mvqWA218ZRZ6nmHY9N3OcRN4GH4zmgGxXA22erpfA04EMU4K"
+access_token <- "4323850282-D4XBXcDcKbHcXzfazFwknpkZqZPYCYlZZwFlwRZ"
+access_secret_token <- "EzzgBuUsn1d8tCqa1XattBT2vYVtLFgZImJSXzEQVQOPQ"
+
+# authenticate via access token
+token <- create_token(
+  app = app_name,
+  consumer_key = api_key,
+  consumer_secret = api_secret_key,
+  access_token = access_token,
+  access_secret = access_secret_token
+)
+```
+Search tweets on the topic of your choice. I want to analyze the sentiment around different stock companies $AAPL and $AMC
+
+```{r}
+stock1 <- search_tweets(
+  "$AAPL",
+  n = 100,
+  include_rts = FALSE
+)
+stock2 <- search_tweets(
+  "$AMC",
+  n = 100,
+  include_rts = FALSE
+)
+```
+ # Pre-proccessing
+ 
+ Lets visualize our stock1 and stock2
+```{r}
+stock1
+stock2
+```
+ process each set of tweets into tidy text obtaining username and text
+```{r}
+tweets.stock1 <- stock1 %>% select(text)
+tweets.stock1
+tweets.stock2 <- stock2 %>% select(text)
+tweets.stock2
+```
+
+clean up the text by stemming words (removing links, punctuations, making text lowercase and using stop words)
+stop words are those words that do not help in determining sentiment such as pronouns, articles etc
+```{r}
+head(tweets.stock1$text)
+
+#remove links manually
+tweets.stock1$stripped_text <- gsub('http\\S+|\\$\\S+', "", tweets.stock1$text)
+
+head(tweets.stock1$stripped_text)
+
+# create a token for each word in stripped_text (using unnest_tokens to remove punctuations. By default, to_lower is true)
+tweets.stock1_words <- tweets.stock1 %>% select(stripped_text) %>% unnest_tokens(word, stripped_text)
+
+# remove stop words 
+tweets.stock1_filtered <- tweets.stock1_words %>% anti_join(stop_words)
+
+head(tweets.stock1_filtered)
+
+# same for stock 2
+#head(tweets.stock2$text)
+
+#remove links manually
+tweets.stock2$stripped_text <- gsub('http\\S+|\\$\\S+', "", tweets.stock2$text)
+
+# create a token for each word in stripped_text (using unnest_tokens to remove punctuations. By default, to_lower is true)
+tweets.stock2_words <- tweets.stock2 %>% select(stripped_text) %>% unnest_tokens(word, stripped_text)
+
+# remove stop words 
+tweets.stock2_filtered <- tweets.stock2_words %>% anti_join(stop_words)
+
+(tweets.stock2_filtered)
+```
+
+Let's find the top 10 used words in both tweets
+```{r}
+# Top 10 words in $AAPL tweet
+tweets.stock1_filtered %>%
+  count(word, sort=TRUE) %>%
+  top_n(20) %>%
+  mutate(word=reorder(word, n)) %>%
+  ggplot(aes(x=word, y=n)) + geom_col() + xlab(NULL) + coord_flip() + theme_classic() + 
+  labs(x="Count", y="Unique words", title="Unique words found in $AAPL tweets")
+
+# Top 10 words in $AMC tweet
+tweets.stock2_filtered %>%
+  count(word, sort=TRUE) %>%
+  top_n(20) %>%
+  mutate(word=reorder(word, n)) %>%
+  ggplot(aes(x=word, y=n)) + geom_col() + xlab(NULL) + coord_flip() + theme_classic() + 
+  labs(x="Count", y="Unique words", title="Unique words found in $AMC tweets")
+
+```
+
+```{r}
+#bing sentiment analysis
+bing_stock1 = tweets.stock1_filtered %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort=TRUE) %>%
+  ungroup()
+
+bing_stock1
+
+
+bing_stock2 = tweets.stock2_filtered %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort=TRUE) %>%
+  ungroup()
+
+bing_stock2
+```
+visualize our data
+```{r}
+bing_stock1 %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill = sentiment)) + geom_col(show.legend = FALSE) + facet_wrap(~sentiment, scales="free_y") + labs(title="Tweets containing $AAPL", x = NULL, y = "contribution to sentiment") + coord_flip() + theme_bw()
+
+bing_stock2 %>%
+  group_by(sentiment) %>%
+  top_n(20) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill = sentiment)) + geom_col(show.legend = FALSE) + facet_wrap(~sentiment, scales="free_y") + labs(title="Tweets containing $AMC", x = NULL, y = "contribution to sentiment") + coord_flip() + theme_bw()
+```
+Let's visualize in wordcloud
+
+```{r}
+tweets.stock1_filtered %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words=200))
+```
+
+```{r}
+tweets.stock2_filtered %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words=200))
+```
+Let's visualize the positive and negative words in wordcloud
+```{r}
+bing_stock1 %>%
+  acast(word ~ sentiment, value.var = 'n', fill=0) %>%
+  comparison.cloud(colors=c("#F8766D", "#00BFC4"),
+                   max.words=100)
+
+```
+
+```{r}
+bing_stock2 %>%
+  acast(word ~ sentiment, value.var = 'n', fill=0) %>%
+  comparison.cloud(colors=c("#F8766D", "#00BFC4"),
+                   max.words=100)
+```
