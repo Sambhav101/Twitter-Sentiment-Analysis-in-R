@@ -1,20 +1,74 @@
 /* Make text visible on inputs */
+body {
+  background-color: #304469;
+  color: black;
+}
+
+
 .shiny-input-container {
   color: #474747;
 }
 
 .navbar {
+  background: #021d47;
   position: sticky;
   top: 0;
+  border: none;
+}
+
+.navbar .container-fluid {
+  padding-top: 1.2vh;
+}
+
+.navbar-brand {
+  color: white !important;
+  font-size: 30px;
+}
+
+.navbar-default .navbar-nav > .active > a {
+  color: white !important;
+  background-color: #021d47 !important;
+}
+
+.nav > li {
+  margin: 0 15px;
 }
 
 .navbar-nav > li:first-of-type {
   display: none;
 }
 
+
+@media (min-width: 768px) {
+  .navbar-nav {
+      float: right;
+      margin: 0;
+      font-size: 16px;
+  }
+}
+
 .col-sm-4 {
   width: 25%;
-  
+}
+
+.well {
+  border: 1px solid black;
+}
+
+.help-block {
+  color: black;
+}
+
+#topic {
+  border-color: black;
+}
+
+#search {
+  border-color: black;
+}
+
+hr {
+  border-color: #8c8080;
 }
 
 .col-sm-8 {
@@ -39,6 +93,14 @@
 
 
 @media only screen and (max-width: 768px) {
+  .navbar {
+    position: static;
+  }
+  
+  .navbar-default .navbar-collapse{
+    border: none;
+  }
+  
   .col-sm-4 {
     width: 100%;
   }
@@ -48,14 +110,32 @@
     display: none;
   }
   
-  #line {
+  hr {
     display: block;
+    border-color: #8c8080;
   }
   
   .radio {
     display: inline-block;
   }
-  .navbar {
-    position: static;
+}
+
+#text-plots {
+  max-width: 700px;
+  margin: auto;
+}
+
+.text-plot {
+  margin: 30px;
+}
+
+
+
+@media only screen and (max-width: 500px) {
+  .navbar-brand {
+    font-size: 4vmin;
+  }
+  .navbar-toggle {
+    font-size: 2.3vmin;
   }
 }

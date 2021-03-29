@@ -19,7 +19,7 @@ ui <- navbarPage(
   tabPanel("Twitter",
            sidebarLayout(
              sidebarPanel(
-                      helpText("Select any trending topic and view what people are talking about in twitter"),
+                      helpText("Enter any topic and view what people are talking about it in twitter"),
                       
                       br(),
                       
@@ -30,7 +30,7 @@ ui <- navbarPage(
                       br(),
                       
                       sliderInput("range",
-                                  label="search from last n tweets",
+                                  label="search from top n tweets",
                                   min = 0,
                                   max = 1000,
                                   value = 100,
@@ -40,11 +40,12 @@ ui <- navbarPage(
                       hr(id = "line"),
                       radioButtons("sentiments",
                                    label="Select Plots",
-                                   choices = c("wordcloud" = "cloud",
-                                               "top unique words" = "top",
-                                               "Positive to negative ratio" = "bing",
-                                               "top sentiment words" = "afinn",
-                                               "emotion sentiment" = "emotion"),
+                                   choices = c("Wordcloud" = "cloud",
+                                               "Bubble" = "bubble",
+                                               "Top words" = "top",
+                                               "Sentiment" = "bing",
+                                               "Contribution" = "afinn",
+                                               "Emotions" = "emotion"),
                                    selected = "cloud")
              ),
              mainPanel(
@@ -56,7 +57,7 @@ ui <- navbarPage(
     ),
   
   tabPanel("Text",
-           fluidRow(
+           div( id = "text-container",
              wellPanel(
                helpText("Find out the sentiments and information about any text"),
                
@@ -64,17 +65,26 @@ ui <- navbarPage(
                textAreaInput("textarea",
                              label="Type or Paste your text inside the textfield",
                              value = "",
-                             width = "80%",
+                             width = "70%",
                              height = "50%",
                              placeholder = "type something..."),
-               br(),
-               hr(),
-               
+               actionButton("analyze", "Analyze text"),
              )
            ),
            
-           fluidRow(
-             plotOutput("text_output")
+           div( id = "text-plots",
+            div( class = "text-plot",
+              plotOutput("topwords") %>% withSpinner(color="#0dc5c1"),
+              ),
+             div ( class = "text-plot",
+               plotOutput("bingplot"),
+             ),
+             div( class = "text-plot",
+               plotOutput("afinnplot"),
+             ),
+             div( class = "text-plot",
+               plotOutput("nrcplot")
+             )
            )
   ),
   tabPanel("URL"),
@@ -104,7 +114,7 @@ server <- function(input, output) {
   
   # get tweet data on button click
   tweet_data <- eventReactive(input$search, {
-    get_tweets_data(input$topic, input$range)
+      get_tweets_data(input$topic, input$range)
   })
   
   # generate wordcloud of tweet_data
@@ -130,6 +140,7 @@ server <- function(input, output) {
   # generate plots according to radio buttons
   output$sentimentplots <- renderPlot({
     switch(input$sentiments,
+           bubble = generate_bubbles(tweet_data()),
            top = top_words(tweet_data()),
            bing = bar_sentiments(bing_sentiment_data()),
            afinn = pn_plot(afinn_data()),
@@ -139,6 +150,44 @@ server <- function(input, output) {
   
   
   # **************************** Text Tab **************************#
+  
+  # get data from text on botton click
+  text_data <- eventReactive(input$analyze, {
+    get_text_data(input$textarea)
+  })
+  
+  # get sentiment data (positive and negative)
+  bing_data <- reactive({
+    bing_sentiments(text_data())
+  })
+  
+  # get tweet-data with emotions
+  nrc_data <- reactive({
+    emotion_sentiments(text_data()) 
+  })
+  
+  # get tweet_data with positive and negative values assigned
+  afinn_pn_data <- reactive({
+    afinn_sentiments(text_data())
+  })
+  
+  output$topwords <- renderPlot({
+    top_words(text_data())
+  })
+  
+  output$bingplot <- renderPlot({
+    bar_sentiments(bing_data())
+  })
+  
+  output$afinnplot <- renderPlot({
+    pn_plot(afinn_pn_data())
+  })
+  
+  output$nrcplot <- renderPlot({
+    bar_sentiments(nrc_data())
+  })
+  
+  
   
 }
 
