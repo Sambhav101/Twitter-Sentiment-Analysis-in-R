@@ -1,0 +1,12 @@
+name: Twitter-Sentiments
+title: Twitter-Sentiments
+username:
+account: sambhav101
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3882732
+bundleId: 4409782
+url: https://sambhav101.shinyapps.io/Twitter-Sentiments/
+when: 1617068998.15526
+asMultiple: FALSE
+asStatic: FALSE

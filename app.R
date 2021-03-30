@@ -187,8 +187,6 @@ server <- function(input, output) {
     bar_sentiments(nrc_data())
   })
   
-  
-  
 }
 
 # Run the app ----

@@ -51,14 +51,16 @@ bing_sentiments <- function(tbl) {
 
 # afinn sentiment analysis
 afinn_sentiments <- function(tbl) {
+  afinn_dat <- readRDS("data/afinn/afinn_111.rds")
   afinn_tweet <- tbl %>%
-    inner_join(get_sentiments("afinn"), by = "word")
+    inner_join(afinn_dat, by = "word")
 }
 
 # nrc sentiment analysis
 emotion_sentiments <- function(tbl) {
+  nrc_dat <- readRDS("data/nrc/NRCWordEmotion.rds")
   emotion_tweet <- tbl %>%
-    inner_join(get_sentiments('nrc'), by = "word") %>%
+    inner_join(nrc_dat, by = "word") %>%
     filter(!grepl('positive|negative', sentiment))
 
 }
